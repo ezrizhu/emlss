@@ -29,6 +29,10 @@ anyhow = "1.0.98"
 rgb = "0.8.50"
 esp-idf-hal = { version = "0.45.2", features = ["rmt-legacy"] }
 esp32-nimble = "0.11.1"
+sds011-rs = "0.3.2"
+embassy-time = "0.4.0"
+embassy-executor = "0.7.0"
+embassy-sync = "0.7.0"
 
 # --- Optional Embassy Integration ---
 # esp-idf-svc = { version = "0.51", features = ["critical-section", "embassy-time-driver", "embassy-sync"] }
