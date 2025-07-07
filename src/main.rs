@@ -1,9 +1,10 @@
-use esp_idf_hal::peripherals::Peripherals;
+use embassy_executor::main;
+use embassy_executor::Spawner;
+use embassy_time::{Duration, Timer, Delay};
 use esp_idf_hal::gpio::AnyIOPin;
+use esp_idf_hal::peripherals::Peripherals;
 use esp_idf_hal::prelude::*;
 use esp_idf_hal::uart;
-use embassy_time::Delay;
-use embassy_executor::Spawner;
 
 mod led;
 use led::RGB8;
@@ -13,19 +14,19 @@ use sds011::SDS011;
 
 //use esp32_nimble::{BLEDevice, BLEScan};
 
-#[embassy_executor::main]
-async fn main() -> anyhow::Result<()> {
+#[main]
+async fn main(_s: Spawner) {
     esp_idf_svc::sys::link_patches();
     esp_idf_svc::log::EspLogger::initialize_default();
 
     log::info!("Hello, world!");
 
-    let peripherals = Peripherals::take()?;
+    let peripherals = Peripherals::take().unwrap();
     let pins = peripherals.pins;
 
     //led
-    let mut led = WS2812RMT::new(pins.gpio8, peripherals.rmt.channel0)?;
-    led.set_pixel(RGB8::new(128, 0, 128))?;
+    let mut led = WS2812RMT::new(pins.gpio8, peripherals.rmt.channel0).unwrap();
+    led.set_pixel(RGB8::new(128, 0, 128)).unwrap();
 
     // sds011
     let mut uart_event_config = uart::config::EventConfig::default();
@@ -47,28 +48,27 @@ async fn main() -> anyhow::Result<()> {
     let sds011 = SDS011::new(&mut uart, sds011::Config::default());
     let mut sds011 = sds011.init(&mut Delay).await.unwrap();
 
+    log::info!("measuring");
     let dust = sds011.measure(&mut Delay).await.unwrap();
     log::info!("{}", dust);
+    loop {
+        Timer::after(Duration::from_secs(10)).await;
+        log::info!("10s");
+    }
 
-
-    Ok(())
-
+    //log::info!("ble");
     //let ble_device = BLEDevice::take();
     //let mut ble_scan = BLEScan::new();
-    //block_on(async {
-    //    let ble_device = BLEDevice::take();
-    //    let mut ble_scan = BLEScan::new();
-    //    ble_scan.active_scan(true).interval(100).window(99);
+    //let ble_device = BLEDevice::take();
+    //let mut ble_scan = BLEScan::new();
+    //ble_scan.active_scan(true).interval(100).window(99);
 
-    //    ble_scan
-    //        .start(ble_device, 5000, |device, data| {
-    //            log::info!("Advertised Device: ({:?}, {:?})", device, data);
-    //            None::<()>
-    //        })
-    //        .await?;
+    //ble_scan
+    //    .start(ble_device, 5000, |device, data| {
+    //        log::info!("Advertised Device: ({:?}, {:?})", device, data);
+    //        None::<()>
+    //    })
+    //    .await.unwrap();
 
-    //    log::info!("Scan end");
-
-    //    Ok(())
-    //})
+    //log::info!("Scan end");
 }
